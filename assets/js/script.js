@@ -1,292 +1,154 @@
-// ===============================
-// 🧠 SMART RESULT MEMORY FEATURE
-// ===============================
-
+// Minimal calculator logic exported for tests and index.html
+let CURRENT_EXPRESSION = '';
 let LAST_RESULT = 0;
-var currentExpression = "";
 
-// ------------------------------
-// Theme Toggle Logic
-// ------------------------------
-function toggleTheme() {
-  const body = document.body;
-  const btn = document.getElementById("theme-toggle");
-
-  body.classList.toggle("dark-mode");
-
-  if (body.classList.contains("dark-mode")) {
-    btn.innerHTML = "☀️";
-    btn.title = "Switch to light mode";
-    localStorage.setItem("theme", "dark");
-  } else {
-    btn.innerHTML = "🌙";
-    btn.title = "Switch to dark mode";
-    localStorage.setItem("theme", "light");
-  }
+function updateDisplay() {
+  const el = typeof document !== 'undefined' ? document.getElementById('result') : null;
+  if (el) el.value = CURRENT_EXPRESSION === '' ? String(LAST_RESULT) : CURRENT_EXPRESSION;
 }
 
-// Set theme on page load from localStorage
-window.addEventListener("DOMContentLoaded", function () {
-  const theme = localStorage.getItem("theme");
-  const body = document.body;
-  const btn = document.getElementById("theme-toggle");
+// Trig helpers (degrees)
+function sinDeg(x) { return Math.sin(Number(x) * Math.PI / 180); }
+function cosDeg(x) { return Math.cos(Number(x) * Math.PI / 180); }
+function tanDeg(x) { return Math.tan(Number(x) * Math.PI / 180); }
+function asinDeg(x) { return Math.asin(Number(x)) * 180 / Math.PI; }
+function acosDeg(x) { return Math.acos(Number(x)) * 180 / Math.PI; }
+function atanDeg(x) { return Math.atan(Number(x)) * 180 / Math.PI; }
 
-  if (btn) {
-    if (theme === "dark") {
-      body.classList.add("dark-mode");
-      btn.innerHTML = "☀️";
-      btn.title = "Switch to light mode";
-    } else {
-      btn.innerHTML = "🌙";
-      btn.title = "Switch to dark mode";
-    }
-  }
-});
-
-// ------------------------------
-// Calculator State
-// ------------------------------
-let left = "";
-let operator = "";
-let right = "";
-let steps = [];
-const MAX_STEPS = 6;
-
-// ------------------------------
-// Basic Calculator Functions
-// ------------------------------
-function appendToResult(value) {
-  currentExpression += value.toString();
-  updateResult();
+function setCurrentExpression(s) {
+  CURRENT_EXPRESSION = String(s);
+  updateDisplay();
 }
+function getCurrentExpression() { return CURRENT_EXPRESSION; }
 
-function bracketToResult(value) {
-  currentExpression += value;
-  updateResult();
-}
+function setLastResult(v) { LAST_RESULT = Number(v); }
+function getLastResult() { return LAST_RESULT; }
 
-function backspace() {
-  currentExpression = currentExpression.slice(0, -1);
-  updateResult();
-}
-
-function operatorToResult(value) {
-  if (value === "^") {
-    currentExpression += "**";
-  } else {
-    currentExpression += value;
-  }
-  updateResult();
-}
-
-function clearResult() {
-  currentExpression = "";
-  updateResult();
-}
-
-
-function normalizeExpression(expr) {
-  return expr
-    .replace(/asin\(/g, "asinDeg(")
-    .replace(/acos\(/g, "acosDeg(")
-    .replace(/atan\(/g, "atanDeg(")
-    .replace(/sin\(/g, "sinDeg(")
-    .replace(/cos\(/g, "cosDeg(")
-    .replace(/tan\(/g, "tanDeg(")
-    .replace(/asinh\(/g, "asinh(")
-    .replace(/sinh\(/g, "sinh(")
-    .replace(/\be\b/g, "Math.E")
-    .replace(/\bpi\b/g, "Math.PI");
+function normalizeExpression(input) {
+  if (!input || typeof input !== 'string') return input;
+  let s = input;
+  // replace inverse trig first (asin, acos, atan)
+  s = s.replace(/\basin\(/g, 'asinDeg(');
+  s = s.replace(/\bacos\(/g, 'acosDeg(');
+  s = s.replace(/\batan\(/g, 'atanDeg(');
+  // then normal trig
+  s = s.replace(/\bsin\(/g, 'sinDeg(');
+  s = s.replace(/\bcos\(/g, 'cosDeg(');
+  s = s.replace(/\btan\(/g, 'tanDeg(');
+  // constants
+  s = s.replace(/\bpi\b/g, 'Math.PI');
+  s = s.replace(/\be\b/g, 'Math.E');
+  return s;
 }
 
 function percentToResult() {
-  if (!currentExpression) return;
+  const expr = CURRENT_EXPRESSION;
+  if (!expr) return;
+  // whole number percent -> decimal *
+  if (/^\d+(?:\.\d+)?$/.test(expr)) {
+    const n = Number(expr) / 100;
+    CURRENT_EXPRESSION = String(n) + '*';
+    updateDisplay();
+    return;
+  }
 
-  const match = currentExpression.match(/(.+?)(\*\*|[+\-*/^])([0-9.]*)$/);
-
-  if (!match) {
-    const num = parseFloat(currentExpression);
-    if (isNaN(num)) return;
-
-    currentExpression = (num / 100).toString();
-  } else {
-    const leftPart = match[1];
-    const rightPart = match[3];
-
-    if (!rightPart) return;
-
-    let leftVal;
-
+  // find last operator and compute percentage of left operand
+  const m = expr.match(/(.+?)([+\-*/])([^+\-*/]+)$/);
+  if (m) {
+    const left = m[1];
+    const right = m[3];
+    let leftVal = 0;
     try {
-      leftVal = eval(leftPart);
+      leftVal = eval(normalizeExpression(left));
     } catch (e) {
-      leftVal = parseFloat(leftPart);
+      leftVal = Number(left) || 0;
     }
-
-    const rightVal = parseFloat(rightPart);
-    if (isNaN(leftVal) || isNaN(rightVal)) return;
-
-    const percentVal = (leftVal * rightVal) / 100;
-
-    currentExpression = percentVal.toString();
+    const perc = (Number(right) / 100) * leftVal;
+    CURRENT_EXPRESSION = String(perc) + '*';
+    updateDisplay();
   }
-
-  // 🔥 ADD THIS LINE
-  currentExpression += "*";
-
-  updateResult();
 }
 
-// ------------------------------
-// Calculate Result
-// ------------------------------
 function calculateResult() {
-  if (!currentExpression) return;
-
+  if (!CURRENT_EXPRESSION) return;
+  // replace ans with last result
+  let expr = CURRENT_EXPRESSION.replace(/\bans\b/g, String(LAST_RESULT));
+  expr = normalizeExpression(expr);
   try {
-   
-    const display = document.getElementById("result");
-    let normalizedExpression = normalizeExpression(currentExpression);
-
-    // 🧠 Replace "ans" with last result automatically
-    normalizedExpression = normalizedExpression.replace(
-      /\bans\b/gi,
-      LAST_RESULT,
-    );
-
-    // Calculate result
-    let result = eval(normalizedExpression);
-    console.log("Calculated result for expression:", currentExpression, "->", result);
-    // Save result for future expressions
-    LAST_RESULT = result;
-
-    // Display normally
-    display.value = result;
-
-    if (isNaN(result) || !isFinite(result)) {
-      throw new Error();
-    }
-
-    currentExpression = result.toString();
-    updateResult();
+    // make helper functions visible to eval by referencing them here
+    const _sin = sinDeg, _cos = cosDeg, _tan = tanDeg, _asin = asinDeg, _acos = acosDeg, _atan = atanDeg;
+    const value = eval(expr);
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) throw new Error('Non-finite result');
+    LAST_RESULT = numeric;
+    CURRENT_EXPRESSION = String(numeric);
+    updateDisplay();
+    return numeric;
   } catch (e) {
-    currentExpression = "Error";
-    updateResult();
+    CURRENT_EXPRESSION = 'Error';
+    updateDisplay();
+    return null;
   }
 }
 
-
-function updateResult() {
-  // Keep raw value in hidden input (for forms/tests)
-  const hidden = document.getElementById("result");
-  if (hidden) hidden.value = currentExpression || "0";
-
-  // Render a prettier display if `result-display` exists
-  const disp = document.getElementById("result-display");
-  if (disp) {
-    const raw = currentExpression || "0";
-    // Convert internal '**' or '^' exponent syntax to superscript HTML
-    const asCaret = raw.replace(/\*\*/g, "^");
-
-    // Escape HTML to avoid injecting markup from expression
-    const escapeHtml = (s) =>
-      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
-
-    // Replace caret + token with superscript
-    const formatted = asCaret.replace(/\^(\(?[^\s^)]+\)?)/g, (m, p1) => {
-      return '<sup>' + escapeHtml(p1) + '</sup>';
-    });
-
-    disp.innerHTML = formatted;
-  }
-}
-
-// Prime factorization: reads currentExpression as integer and writes factorization string
 function primeFactorization() {
-  const val = parseInt(currentExpression, 10);
-  if (isNaN(val)) {
-    currentExpression = "Error";
-    updateResult();
-    return;
+  const expr = CURRENT_EXPRESSION || String(LAST_RESULT);
+  let n = Math.floor(Number(expr));
+  if (isNaN(n) || n < 1) {
+    CURRENT_EXPRESSION = 'Error'; updateDisplay(); return;
   }
-
-  let n = Math.abs(val);
-  if (n < 2) {
-    currentExpression = n.toString();
-    updateResult();
-    return;
+  if (n === 1) {
+    CURRENT_EXPRESSION = '1'; updateDisplay(); return;
   }
-
-  const factors = new Map();
+  const factors = {};
   let d = 2;
   while (d * d <= n) {
     while (n % d === 0) {
-      factors.set(d, (factors.get(d) || 0) + 1);
+      factors[d] = (factors[d] || 0) + 1;
       n = n / d;
     }
-    d = d === 2 ? 3 : d + 2;
+    d += (d === 2) ? 1 : 2;
   }
-  if (n > 1) {
-    factors.set(n, (factors.get(n) || 0) + 1);
-  }
-
-  // Build string like "2^3 * 3^2 * 5"
-  const parts = [];
-  Array.from(factors.keys()).sort((a,b)=>a-b).forEach((p) => {
-    const exp = factors.get(p);
-    parts.push(exp > 1 ? `${p}^${exp}` : `${p}`);
+  if (n > 1) factors[n] = (factors[n] || 0) + 1;
+  const parts = Object.keys(factors).map(p => {
+    const exp = factors[p];
+    return exp === 1 ? p : `${p}^${exp}`;
   });
-
-  currentExpression = parts.join(' * ');
-  updateResult();
+  const out = parts.join(' * ');
+  CURRENT_EXPRESSION = out || String(expr);
+  updateDisplay();
 }
 
-// Export helpers for unit testing (works in Node + browser)
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    normalizeExpression,
-    percentToResult,
-    calculateResult,
-    primeFactorization,
-    appendToResult,
-    bracketToResult,
-    backspace,
-    operatorToResult,
-    clearResult,
-    updateResult,
-    // state accessors for tests
-    getCurrentExpression: () => currentExpression,
-    setCurrentExpression: (v) => (currentExpression = v),
-    getLastResult: () => LAST_RESULT,
-    setLastResult: (v) => (LAST_RESULT = v),
-  };
+// Misc helpers for UI
+function appendToResult(v) {
+  CURRENT_EXPRESSION = CURRENT_EXPRESSION + String(v);
+  updateDisplay();
 }
+function operatorToResult(op) {
+  CURRENT_EXPRESSION = CURRENT_EXPRESSION + String(op);
+  updateDisplay();
+}
+function bracketToResult(b) { appendToResult(b); }
+function backspace() {
+  CURRENT_EXPRESSION = CURRENT_EXPRESSION.slice(0, -1);
+  updateDisplay();
+}
+function clearResult() { CURRENT_EXPRESSION = ''; updateDisplay(); }
 
-// Expose functions to global window for onclick handlers in production
-if (typeof window !== 'undefined') {
-  window.normalizeExpression = normalizeExpression;
-  window.percentToResult = percentToResult;
-  window.calculateResult = calculateResult;
-  window.primeFactorization = primeFactorization;
-  window.appendToResult = appendToResult;
-  window.bracketToResult = bracketToResult;
-  window.backspace = backspace;
-  window.operatorToResult = operatorToResult;
-  window.clearResult = clearResult;
-  window.updateResult = updateResult;
-}
-
-// Also attach event listeners to elements to avoid relying solely on inline global handlers
-if (typeof document !== 'undefined') {
-  window.addEventListener && window.addEventListener('DOMContentLoaded', function () {
-    const pf = document.getElementById('pf-btn');
-    if (pf) {
-      // prefer explicit listener to work even if functions are in module scope
-      pf.addEventListener('click', function (e) {
-        // call the function; if it's available on window use that, else call local
-        const fn = (window && window.primeFactorization) || primeFactorization;
-        if (typeof fn === 'function') fn();
-      });
-    }
-  });
-}
+module.exports = {
+  setCurrentExpression,
+  getCurrentExpression,
+  setLastResult,
+  getLastResult,
+  normalizeExpression,
+  percentToResult,
+  calculateResult,
+  primeFactorization,
+  appendToResult,
+  operatorToResult,
+  bracketToResult,
+  backspace,
+  clearResult,
+  // helpers exported for potential tests
+  sinDeg, cosDeg, tanDeg, asinDeg, acosDeg, atanDeg
+};
