@@ -23,6 +23,7 @@
           <h4 class="text-center group-header mb-0">VUNA CALCULATOR</h4>
           <p class="text-center text-small text-muted">
             <i>Created by set 2025/26 Software Engineering</i>
+            <i>Adaugo Quiva</i>
           </p>
         </div>
         <div class="row">
@@ -80,6 +81,42 @@
           <script src="assets/js/bootstrap.min.js"></script>
           <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
           <script src="assets/js/script.js"></script>
+          
+          <script>
+            // Prime Factorization inline
+            function primeFactorization() {
+              const expr = currentExpression || String(LAST_RESULT);
+              let n = Math.floor(Number(expr));
+              if (isNaN(n) || n < 1) {
+                currentExpression = 'Error';
+                updateResult();
+                return;
+              }
+              if (n === 1) {
+                currentExpression = '1';
+                updateResult();
+                return;
+              }
+              const factors = {};
+              let d = 2;
+              while (d * d <= n) {
+                while (n % d === 0) {
+                  factors[d] = (factors[d] || 0) + 1;
+                  n = n / d;
+                }
+                d += (d === 2) ? 1 : 2;
+              }
+              if (n > 1) factors[n] = (factors[n] || 0) + 1;
+              const parts = Object.keys(factors).map(p => {
+                const exp = factors[p];
+                return exp === 1 ? p : `${p}^${exp}`;
+              });
+              const out = parts.join(' * ');
+              currentExpression = out || String(expr);
+              updateResult();
+            }
+          </script>
+          
           <button id="scroll-to-calculator" title="Back to Calculator">↑</button>
         </div>
       </div>
