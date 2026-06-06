@@ -261,3 +261,17 @@ if (typeof module !== "undefined" && module.exports) {
     setLastResult: (v) => (LAST_RESULT = v),
   };
 }
+
+// Expose functions to global window for onclick handlers in production
+if (typeof window !== 'undefined') {
+  window.normalizeExpression = normalizeExpression;
+  window.percentToResult = percentToResult;
+  window.calculateResult = calculateResult;
+  window.primeFactorization = primeFactorization;
+  window.appendToResult = appendToResult;
+  window.bracketToResult = bracketToResult;
+  window.backspace = backspace;
+  window.operatorToResult = operatorToResult;
+  window.clearResult = clearResult;
+  window.updateResult = updateResult;
+}
