@@ -180,12 +180,53 @@ function updateResult() {
   document.getElementById("result").value = currentExpression || "0";
 }
 
+// Prime factorization: reads currentExpression as integer and writes factorization string
+function primeFactorization() {
+  const val = parseInt(currentExpression, 10);
+  if (isNaN(val)) {
+    currentExpression = "Error";
+    updateResult();
+    return;
+  }
+
+  let n = Math.abs(val);
+  if (n < 2) {
+    currentExpression = n.toString();
+    updateResult();
+    return;
+  }
+
+  const factors = new Map();
+  let d = 2;
+  while (d * d <= n) {
+    while (n % d === 0) {
+      factors.set(d, (factors.get(d) || 0) + 1);
+      n = n / d;
+    }
+    d = d === 2 ? 3 : d + 2;
+  }
+  if (n > 1) {
+    factors.set(n, (factors.get(n) || 0) + 1);
+  }
+
+  // Build string like "2^3 * 3^2 * 5"
+  const parts = [];
+  Array.from(factors.keys()).sort((a,b)=>a-b).forEach((p) => {
+    const exp = factors.get(p);
+    parts.push(exp > 1 ? `${p}^${exp}` : `${p}`);
+  });
+
+  currentExpression = parts.join(' * ');
+  updateResult();
+}
+
 // Export helpers for unit testing (works in Node + browser)
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     normalizeExpression,
     percentToResult,
     calculateResult,
+    primeFactorization,
     appendToResult,
     bracketToResult,
     backspace,

@@ -45,3 +45,19 @@ test('calculateResult replaces ans with LAST_RESULT', () => {
   expect(calc.getLastResult()).toBe(10);
   expect(calc.getCurrentExpression()).toBe('10');
 });
+
+test('primeFactorization computes factors for 360', () => {
+  calc.setCurrentExpression('360');
+  calc.primeFactorization();
+  expect(calc.getCurrentExpression()).toBe('2^3 * 3^2 * 5');
+});
+
+test('primeFactorization handles primes and 1', () => {
+  calc.setCurrentExpression('13');
+  calc.primeFactorization();
+  expect(calc.getCurrentExpression()).toBe('13');
+
+  calc.setCurrentExpression('1');
+  calc.primeFactorization();
+  expect(calc.getCurrentExpression()).toBe('1');
+});
