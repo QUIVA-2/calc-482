@@ -179,3 +179,23 @@ function calculateResult() {
 function updateResult() {
   document.getElementById("result").value = currentExpression || "0";
 }
+
+// Export helpers for unit testing (works in Node + browser)
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    normalizeExpression,
+    percentToResult,
+    calculateResult,
+    appendToResult,
+    bracketToResult,
+    backspace,
+    operatorToResult,
+    clearResult,
+    updateResult,
+    // state accessors for tests
+    getCurrentExpression: () => currentExpression,
+    setCurrentExpression: (v) => (currentExpression = v),
+    getLastResult: () => LAST_RESULT,
+    setLastResult: (v) => (LAST_RESULT = v),
+  };
+}

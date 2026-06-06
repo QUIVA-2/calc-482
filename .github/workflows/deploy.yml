@@ -22,3 +22,34 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+
+  build-and-deploy:
+    name: Build and Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t calc-app .
+
+      - name: Extract static files from image
+        run: |
+          mkdir -p dist
+          docker create --name temp calc-app
+          docker cp temp:/usr/share/nginx/html/index.html dist/
+          docker cp temp:/usr/share/nginx/html/assets dist/
+          docker rm temp
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: dist/
+          server-dir: /public_html/
+          security: loose
+          dangerous-clean-slate: true
+          log-level: verbose
