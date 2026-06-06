@@ -177,7 +177,28 @@ function calculateResult() {
 
 
 function updateResult() {
-  document.getElementById("result").value = currentExpression || "0";
+  // Keep raw value in hidden input (for forms/tests)
+  const hidden = document.getElementById("result");
+  if (hidden) hidden.value = currentExpression || "0";
+
+  // Render a prettier display if `result-display` exists
+  const disp = document.getElementById("result-display");
+  if (disp) {
+    const raw = currentExpression || "0";
+    // Convert internal '**' or '^' exponent syntax to superscript HTML
+    const asCaret = raw.replace(/\*\*/g, "^");
+
+    // Escape HTML to avoid injecting markup from expression
+    const escapeHtml = (s) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
+
+    // Replace caret + token with superscript
+    const formatted = asCaret.replace(/\^(\(?[^\s^)]+\)?)/g, (m, p1) => {
+      return '<sup>' + escapeHtml(p1) + '</sup>';
+    });
+
+    disp.innerHTML = formatted;
+  }
 }
 
 // Prime factorization: reads currentExpression as integer and writes factorization string
