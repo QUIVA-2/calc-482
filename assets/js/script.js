@@ -275,3 +275,18 @@ if (typeof window !== 'undefined') {
   window.clearResult = clearResult;
   window.updateResult = updateResult;
 }
+
+// Also attach event listeners to elements to avoid relying solely on inline global handlers
+if (typeof document !== 'undefined') {
+  window.addEventListener && window.addEventListener('DOMContentLoaded', function () {
+    const pf = document.getElementById('pf-btn');
+    if (pf) {
+      // prefer explicit listener to work even if functions are in module scope
+      pf.addEventListener('click', function (e) {
+        // call the function; if it's available on window use that, else call local
+        const fn = (window && window.primeFactorization) || primeFactorization;
+        if (typeof fn === 'function') fn();
+      });
+    }
+  });
+}
