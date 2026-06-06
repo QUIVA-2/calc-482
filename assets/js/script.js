@@ -135,20 +135,60 @@ function backspace() {
 }
 function clearResult() { CURRENT_EXPRESSION = ''; updateDisplay(); }
 
-module.exports = {
-  setCurrentExpression,
-  getCurrentExpression,
-  setLastResult,
-  getLastResult,
-  normalizeExpression,
-  percentToResult,
-  calculateResult,
-  primeFactorization,
-  appendToResult,
-  operatorToResult,
-  bracketToResult,
-  backspace,
-  clearResult,
-  // helpers exported for potential tests
-  sinDeg, cosDeg, tanDeg, asinDeg, acosDeg, atanDeg
-};
+function toggleTheme() {
+  const html = typeof document !== 'undefined' ? document.documentElement : null;
+  if (!html) return;
+  const isDark = html.getAttribute('data-bs-theme') === 'dark';
+  html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = isDark ? '🌙' : '☀️';
+}
+
+// Load saved theme on init
+if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', function() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-bs-theme', saved);
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = saved === 'dark' ? '☀️' : '🌙';
+  });
+}
+
+// Make functions globally available for browser onclick handlers
+if (typeof window !== 'undefined') {
+  window.setCurrentExpression = setCurrentExpression;
+  window.getCurrentExpression = getCurrentExpression;
+  window.setLastResult = setLastResult;
+  window.getLastResult = getLastResult;
+  window.normalizeExpression = normalizeExpression;
+  window.percentToResult = percentToResult;
+  window.calculateResult = calculateResult;
+  window.primeFactorization = primeFactorization;
+  window.appendToResult = appendToResult;
+  window.operatorToResult = operatorToResult;
+  window.bracketToResult = bracketToResult;
+  window.backspace = backspace;
+  window.clearResult = clearResult;
+  window.toggleTheme = toggleTheme;
+}
+
+// Export for Node/tests
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    setCurrentExpression,
+    getCurrentExpression,
+    setLastResult,
+    getLastResult,
+    normalizeExpression,
+    percentToResult,
+    calculateResult,
+    primeFactorization,
+    appendToResult,
+    operatorToResult,
+    bracketToResult,
+    backspace,
+    clearResult,
+    sinDeg, cosDeg, tanDeg, asinDeg, acosDeg, atanDeg
+  };
+}
