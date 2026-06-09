@@ -203,7 +203,7 @@
     }
 
     .btn-equals {
-      background: var(--primary-color);
+      background: #fa5252;
       color: white;
       grid-column: span 1;
     }
