@@ -175,6 +175,10 @@
       transform: translateY(0);
     }
 
+    .btn{
+      background-color: #000;
+    }
+
     .btn-light {
       background: #ffffff;
       color: #495057;
@@ -203,7 +207,7 @@
     }
 
     .btn-equals {
-      background: #000;
+      background-color: #000;
       color: white;
       grid-column: span 1;
     }
