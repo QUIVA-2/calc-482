@@ -205,7 +205,7 @@
 
     .calculator .btn-equals,
     .btn-equals {
-      background-color: #0000 !important;
+      background-color: #ff0000 !important;
       color: white !important;
       grid-column: span 1;
       border: none !important;
