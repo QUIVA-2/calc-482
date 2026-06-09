@@ -203,15 +203,25 @@
       background: #ffe3e3;
     }
 
+    .calculator .btn-equals,
     .btn-equals {
-      background-color: #000;
-      color: white;
+      background-color: #ff0000 !important;
+      color: white !important;
       grid-column: span 1;
+      border: none !important;
+      box-shadow: var(--btn-shadow) !important;
     }
 
+    .calculator .btn-equals:hover,
     .btn-equals:hover {
-      background: #0b5ed7;
-      color: white;
+      background-color: #cc0000 !important;
+      color: white !important;
+      box-shadow: var(--btn-hover-shadow) !important;
+    }
+    
+    .calculator .btn-equals:active,
+    .btn-equals:active {
+      background-color: #990000 !important;
     }
 
     .btn-special {
