@@ -38,9 +38,11 @@ jobs:
         run: |
           mkdir -p dist
           docker create --name temp calc-app
-          docker cp temp:/usr/share/nginx/html/index.html dist/
-          docker cp temp:/usr/share/nginx/html/assets dist/
+          docker cp temp:/usr/share/nginx/html/ dist/html
           docker rm temp
+          # Move files to root of dist
+          mv dist/html/* dist/
+          rmdir dist/html
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
